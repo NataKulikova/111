@@ -1,0 +1,15 @@
+
+{% extends 'flatpages/default.html' %}
+
+{% block title %}
+    <h1>{{ post_detail.title }}</h1>
+{% endblock title %}
+
+<!-- В контенте на странице мы выводим все товары -->
+{% block content %}
+{{ post_detail.dateCreation }}
+ <p>{{ post_detail.categoryType }}</p>
+ <p>{{ post_detail.text }}</p>
+<h3>{{ post_detail.price }}</h3>
+
+{% endblock content %}

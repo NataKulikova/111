@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+{% extends 'flatpages/default.html' %}
+
+{% block content %}
+<h1>Приём отклика</h1>
+<hr>
+<form action="" method="post">
+  {% csrf_token %}
+  <p>Принять "{{ object.text }}"?</p>
+  <input type="submit" value="Accept" />
+</form>
+{% endblock content %}

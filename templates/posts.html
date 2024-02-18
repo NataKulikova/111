@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+{% extends 'flatpages/default.html'%}
+
+{% block title %}
+MMORPG Trading
+{% endblock title %}
+
+<!-- В контенте на странице мы выводим сам товар, идентификатор которого был передан в url -->
+{% block content %}
+<h3>{{ time_now|date:'M d Y' }}</h3>
+
+   <br>
+    <hr>
+    {% if not request.user.is_authenticated %}
+    <button>
+        <a class="nav-link" href="{% url 'account_signup' %}">
+            <h4><strong>Зарегистрироваться</strong></h4>
+        </a>
+    </button>
+    <button>
+        <a class="nav-link" href="{% url 'account_login' %}">
+            <h4><strong>Залогиниться</strong></h4>
+        </a>
+    </button>
+    {% endif %}
+
+    {% if request.user.is_authenticated %}
+
+    <button>
+        <a class="nav-link" href="{% url 'responses' %}">
+            <h4><strong>Все отклики</strong></h4>
+        </a>
+    </button>
+    <button>
+        <a class="nav-link" href="{% url 'subscriptions' %}">
+            <h4><strong>Подписаться</strong></h4>
+        </a>
+    </button>
+    <button>
+        <a class="nav-link" href="{% url 'post_create' %}">
+            <h4><strong>Создать новость</strong></h4>
+        </a>
+    </button>
+    {% endif %}
+    <br />
+
+   <h1>Все объявления</h1>
+
+   {# Добавляем форму, которая объединяет набор полей, которые будут отправляться в запросе #}
+   <form action="" method="get">
+       {# Переменная, которую мы передали через контекст, может сгенерировать нам форму с полями #}
+       {{ filterset.form.as_p }}
+       {# Добавим кнопку отправки данных формы #}
+       <input type="submit" value="Найти" />
+   </form>
+
+   <hr>
+   {% if posts %}
+       <table>
+           <tr>
+               <td>Дата</td>
+               <td>Название</td>
+               <td>Описание</td>
+               <td>Категория</td>
+               <td>Цена</td>
+               <td>Автор</td>
+               <td>Вложения</td>
+           </tr>
+           {% for i in posts %}
+           <tr>
+
+               <td>{{ i.dateCreation }}</td>
+               <td>{{ i.title|truncatewords:2 }}</td>
+               <td>{{ i.text|truncatechars:20 }}</td>
+               <td>{{ i.categoryType }}</td>
+               <td>{{ i.price }}</td>
+               <td>{{ i.to_reg_user }}</td>
+
+            {% if post.upload %}
+            <td><img src="{{ post.upload.url }}" width="200" height="200"></td>
+            {% endif %}
+           </tr>
+           {% endfor %}
+
+       </table>
+   {% else %}
+       <h2>Объявлений нет!</h2>
+   {% endif %}
+
+  {# Добавляем пагинацию на страницу #}
+
+   {# Информация о предыдущих страницах #}
+   {% if page_obj.has_previous %}
+       <a href="?page=1">1</a>
+       {% if page_obj.previous_page_number != 1 %}
+           ...
+           <a href="?page={{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
+       {% endif %}
+   {% endif %}
+
+   {# Информация о текущей странице #}
+   {{ page_obj.number }}
+
+   {# Информация о следующих страницах #}
+   {% if page_obj.has_next %}
+       <a href="?page={{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
+       {% if paginator.num_pages != page_obj.next_page_number %}
+           ...
+           <a href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
+       {% endif %}
+   {% endif %}
+
+{% endblock content %}
+
