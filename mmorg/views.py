@@ -1,7 +1,7 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from .models import Post, Response, Subscriptions, Category, RegUsers
+from .models import Post, Response, Subscriptions, Category
 from datetime import datetime
-from .forms import PostForm
+from .forms import PostForm, ResponseForm
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.urls import reverse_lazy
 from .filters import PostFilter, ResponseFilter
@@ -53,9 +53,21 @@ class PostView(ListView):
    # Переопределяем функцию получения списка товаров
 
 class PostDetail(DetailView):
+    raise_exception = True
     model = Post
     template_name = 'post_detail.html'
     context_object_name = 'post_detail'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pk = self.kwargs['pk']
+        form = ResponseForm()
+        post = get_object_or_404(Post, pk=pk)
+        responses = post.reply.all()
+        context['post'] = post
+        context['responses'] = responses
+        context['form'] = form
+        return context
 
 class PostCreate(LoginRequiredMixin, CreateView):
     raise_exception = True
@@ -66,6 +78,12 @@ class PostCreate(LoginRequiredMixin, CreateView):
     # и новый шаблон, в котором используется форма.
     template_name = 'post_edit.html'
 
+    def form_valid(self, form):
+        post = form.save(commit = False)
+        post.author=self.request.user
+        post.save()
+        return super().form_valid(form)
+
 class PostEdit(LoginRequiredMixin, UpdateView):
     raise_exception = True
     form_class = PostForm
@@ -75,15 +93,15 @@ class PostEdit(LoginRequiredMixin, UpdateView):
 class ResponseCreate(LoginRequiredMixin, CreateView):
     permission_required = ('PostBoard_main.add_response')
     raise_exception = True
-    form_class = PostForm
+    form_class = ResponseForm
     model = Response
     template_name = 'response_create.html'
     # success_url = res_post.get_absolute_url()
 
     def post(self, request, pk, **kwargs):
         if request.method == 'POST':
-            form = PostForm(request.POST or None)
-            post_to_res = get_object_or_404(Posts, id=pk)
+            form = ResponseForm(request.POST or None)
+            post_to_res = get_object_or_404(Post, id=pk)
             if form.is_valid():
                 f = form.save(commit=False)
                 f.res_user_id = self.request.user.id
@@ -93,7 +111,7 @@ class ResponseCreate(LoginRequiredMixin, CreateView):
             else:
                 return render(request, 'posts/response_create.html', {'form': form})
         else:
-            form = PostForm()
+            form = ResponseForm()
             return render(request, 'posts/response_create.html', {'form': form})
 
 
@@ -118,7 +136,7 @@ class ResponseDelete(PermissionRequiredMixin, DeleteView):
 class ResponseAccept(PermissionRequiredMixin, UpdateView):
     permission_required = ('PostBoard_main.change_response')
     raise_exception = True
-    form_class = PostForm
+    form_class = ResponseForm
     model = Response
     template_name = 'response_accept.html'
 
@@ -142,7 +160,7 @@ class ResponseList(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = Response.objects.filter(res_post__to_reg_user__reg_user=self.request.user.id).order_by('-time_in')
+        queryset = Response.objects.filter(res_post__user=self.request.user.id).order_by('-time_in')
         self.filterset = ResponseFilter(self.request.GET, queryset, request=self.request.user.id)
         return self.filterset.qs
 
@@ -158,7 +176,7 @@ def upgrade_user(request):
     group = Group.objects.get(name='Зарегистрированные пользователи')
     if not user.groups.filter(name='Зарегистрированные пользователи').exists():
         group.user_set.add(user)
-        RegUsers.objects.create(reg_user=user)
+        #RegUsers.objects.create(reg_user=user)
     return redirect('posts')
 
 

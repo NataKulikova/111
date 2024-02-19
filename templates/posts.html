@@ -72,9 +72,9 @@ MMORPG Trading
                <td>{{ i.dateCreation }}</td>
                <td>{{ i.title|truncatewords:2 }}</td>
                <td>{{ i.text|truncatechars:20 }}</td>
-               <td>{{ i.categoryType }}</td>
+               <td>{{ i.category }}</td>
                <td>{{ i.price }}</td>
-               <td>{{ i.to_reg_user }}</td>
+               <td>{{ i.author }}</td>
 
             {% if post.upload %}
             <td><img src="{{ post.upload.url }}" width="200" height="200"></td>
